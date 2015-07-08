@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Email","Simple email representation"],["EmailBuilder","Builds an `Email` structure"]],"trait":[["ToHeader","Converts an adress or an address with an alias to a `Address`"],["ToMailbox","Converts an adress or an address with an alias to a `Mailbox`"]]});
