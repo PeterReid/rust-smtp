@@ -79,7 +79,7 @@
 //! let email = builder.build();
 //!
 //! // Connect to a remote server on a custom port
-//! let mut sender = SenderBuilder::new(("server.tld", 10025))
+//! let mut sender = SenderBuilder::new(("server.tld", 10025)).unwrap()
 //!     // Set the name sent during EHLO/HELO, default is `localhost`
 //!     .hello_name("my.hostname.tld")
 //!     // Add credentials for authentication
@@ -128,7 +128,7 @@
 //! use smtp::SMTP_PORT;
 //! use std::net::TcpStream;
 //!
-//! let mut email_client: Client<SmtpStream> = Client::new(("localhost", SMTP_PORT));
+//! let mut email_client: Client<SmtpStream> = Client::new(("localhost", SMTP_PORT)).unwrap();
 //! let _ = email_client.connect();
 //! let _ = email_client.ehlo("my_hostname");
 //! let _ = email_client.mail("user@example.com", None);

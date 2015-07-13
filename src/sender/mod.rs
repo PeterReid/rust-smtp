@@ -9,6 +9,7 @@
 
 //! Sends an email using the client
 
+use std::io;
 use std::string::String;
 use std::net::{SocketAddr, ToSocketAddrs};
 
@@ -41,19 +42,23 @@ pub struct SenderBuilder {
 /// Builder for the SMTP Sender
 impl SenderBuilder {
     /// Creates a new local SMTP client
-    pub fn new<A: ToSocketAddrs>(addr: A) -> SenderBuilder {
-        SenderBuilder {
-            server_addr: addr.to_socket_addrs().ok().expect("could not parse server address").next().unwrap(),
+    pub fn new<A: ToSocketAddrs>(addr: A) -> Result<SenderBuilder, SmtpError> {
+        let ip = try!(try!(addr.to_socket_addrs())
+            .next()
+            .ok_or(io::Error::new(io::ErrorKind::InvalidInput, "Could not resolve SMTP address")));
+
+        Ok(SenderBuilder {
+            server_addr: ip,
             credentials: None,
             connection_reuse_count_limit: 100,
             enable_connection_reuse: false,
             hello_name: "localhost".to_string(),
-        }
+        })
     }
 
     /// Creates a new local SMTP client to port 25
     pub fn localhost() -> SenderBuilder {
-        SenderBuilder::new(("localhost", SMTP_PORT))
+        SenderBuilder::new(("localhost", SMTP_PORT)).unwrap()
     }
 
     /// Set the name used during HELO or EHLO
@@ -130,7 +135,7 @@ impl Sender {
     ///
     /// It does not connects to the server, but only creates the `Sender`
     pub fn new(builder: SenderBuilder) -> Sender {
-        let client: Client<SmtpStream> = Client::new(builder.server_addr);
+        let client: Client<SmtpStream> = Client::new_resolved(builder.server_addr);
         Sender{
             client: client,
             server_info: None,

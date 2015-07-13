@@ -11,12 +11,12 @@
 
 use std::string::String;
 use std::net::{SocketAddr, ToSocketAddrs};
-use std::io::{BufRead, Read, Write};
+use std::io::{self, BufRead, Read, Write};
 
 use bufstream::BufStream;
 
 use response::ResponseParser;
-use error::SmtpResult;
+use error::{SmtpResult, SmtpError};
 use client::net::{Connector, SmtpStream};
 use client::authentication::{plain, cram_md5};
 use {CRLF, MESSAGE_ENDING};
@@ -69,10 +69,20 @@ impl<S: Write + Read = SmtpStream> Client<S> {
     /// Creates a new SMTP client
     ///
     /// It does not connects to the server, but only creates the `Client`
-    pub fn new<A: ToSocketAddrs>(addr: A) -> Client<S> {
+    pub fn new<A: ToSocketAddrs>(addr: A) -> Result<Client<S>, SmtpError> {
+        let ip = try!(try!(addr.to_socket_addrs())
+            .next()
+            .ok_or(io::Error::new(io::ErrorKind::InvalidInput, "Could not resolve SMTP address")));
+        Ok(Self::new_resolved(ip))
+    }
+
+    /// Creates a new SMTP client given an already-resolved socket address
+    ///
+    /// It does not connects to the server, but only creates the `Client`
+    pub fn new_resolved(addr: SocketAddr) -> Client<S> {
         Client{
             stream: None,
-            server_addr: addr.to_socket_addrs().ok().expect("could not parse server address").next().unwrap(),
+            server_addr: addr
         }
     }
 }
